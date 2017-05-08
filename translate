@@ -1,0 +1,21 @@
+#!/bin/bash
+
+# wrapper script for translate shell
+
+# check for translate-shell (https://github.com/soimort/translate-shell)
+if [ ! -x ~/bin/trans ]
+        then
+                mkdir -p ~/bin
+                curl -sS -L --ssl-reqd https://git.io/trans -o ~/bin/trans
+                chmod +x ~/bin/trans
+fi
+
+# reload PATH without logout
+source ~/.profile
+
+if [ $# -eq 2 ]
+        #then cat $2 | xargs -d '\n' trans -no-auto -b $1 | paste $2 -
+        then trans -no-auto -b $1 -i $2 | paste $2 - | tr -d '\r' | sed 's/$/\r/'
+else
+        printf "Usage:\t 1st argument - ISO language code \n\t 2nd argument - input file \n"
+fi
