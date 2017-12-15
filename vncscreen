@@ -1,0 +1,16 @@
+#!/bin/bash
+
+# VNC helper to provide second virtual screen
+#
+# Prerequisite packages (Debian / Ubuntu):
+# x11vnc, i3, xvfb
+
+Xvfb :1 -screen scrn 1024x768x24 &
+sleep 1
+DISPLAY=:1 i3 >/dev/null &
+DISPLAY=:1 "$1" >/dev/null &
+x11vnc -display :1 -quiet
+
+#killall "$1"
+#killall i3
+#killall Xvfb
