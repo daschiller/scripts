@@ -5,12 +5,30 @@
 # Prerequisite packages (Debian / Ubuntu):
 # x11vnc, i3, xvfb
 
-Xvfb :1 -screen scrn 1024x768x24 &
-sleep 1
-DISPLAY=:1 i3 >/dev/null &
-DISPLAY=:1 "$1" >/dev/null &
-x11vnc -display :1 -quiet
+# Enable job control, otherwise SIGINT is sent to all backgrounded processes
+set -m
 
-#killall "$1"
-#killall i3
-#killall Xvfb
+if [ $# -gt 0 ]
+    then
+        printf "SEPARATE SCREEN MODE\n--------------------"
+        Xvfb :1 -screen scrn 2048x1536x24 &
+        export pid1=$!
+        sleep 1 # wait for Xvfb to come up
+        DISPLAY=:1 i3 >/dev/null 2>&1 &
+        export pid2=$!
+        DISPLAY=:1 "$@" >/dev/null 2>&1 &
+        export pid3=$!        
+        x11vnc -usepw -display :1 -quiet -forever
+        kill $pid3
+        kill $pid2
+        kill $pid1
+else
+    printf "EXTENDED SCREEN MODE\n--------------------"
+    xrandr --newmode "2048x1536_60.00"  267.25  2048 2208 2424 2800  1536 1539 1543 1592 -hsync +vsync
+    xrandr --addmode VGA-1 "2048x1536_60.00"
+    xrandr --output VGA-1 --mode "2048x1536_60.00" --right-of HDMI-2
+    x11vnc -usepw -clip xinerama1 -viewonly -forever -nocursorshape -nocursorpos -quiet
+    xrandr --output VGA-1 --off
+    xrandr --delmode VGA-1 "2048x1536_60.00"
+    xrandr --rmmode "2048x1536_60.00"
+fi
